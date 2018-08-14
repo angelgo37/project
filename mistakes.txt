@@ -1,0 +1,10 @@
+1. map not working - Considering not using mapping
+2. Object would keep moving after letting go of the button - Fixed
+3. didnt define ani so would crash when I was trying to move - Fixed
+4. Sprites flash instead of remaining on screen - Fixed
+5. Sprite size too big, python wont accept a number lower than 1 - Fixed
+6. Background too small - Fixed
+7. "Player not defined" - Dont like sprite sheet
+8. Player vibrates back and forth - Didnt make it a vector - Fixed
+9. Player goes flying off screen, Forgot to * velocity by friction - Fixed
+10. Players can go too fast, Need to add a maximum velocity - Fixed
