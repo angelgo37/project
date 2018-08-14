@@ -1,0 +1,13 @@
+# -- Colours
+BLACK = (0,0,0)
+WHITE = (255,255,255)
+BLUE = (50,50,255)
+YELLOW = (255,255,0)
+# -- Player Properties
+PLAYER_ACC = 0.5
+PLAYER_FRICTION = -0.12
+PLAYER_GRAVITY = 0.8
+# -- Game Options
+WIDTH = 640
+LENGTH = 480
+FPS = 60
