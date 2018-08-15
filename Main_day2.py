@@ -1,12 +1,13 @@
 import pygame as pg
 import random
 from Settings import *
-from Sprite import *
+from sprite2 import *
 
 class Game:
     def __init__(self):
         # -- Initialise PyGame
         pg.init()
+        pg.mixer.init
         # -- Blank Screen
         size = (WIDTH,LENGTH)
         self.screen = pg.display.set_mode(size)
@@ -21,8 +22,15 @@ class Game:
         # -- New Game
         self.all_sprites = pg.sprite.Group()
         self.platforms = pg.sprite.Group()
-        self.player = Player()
+        self.player = Player(self)
         self.all_sprites.add(self.player)
+        # -- Platforms
+        for plat in PLATFORM_LIST:
+            # -- Explode the list into its 4 components
+            p = Platform(*plat)
+            self.all_sprites.add(p)
+            self.platforms.add(p)
+        # -- Running the Game
         self.run()
         
 
@@ -35,21 +43,39 @@ class Game:
             self.events()
             self.update()
             self.draw()
-
+        
     def update(self):
         # -- Game Loop Update
         self.all_sprites.update()
-        coll = pg.sprite.spritecollide(self.player, self.platforms, False)
-        if coll:
-            self.player.pos.y = coll[0].rect.top + 1
-            self.player.vel.y = 0
+        # -- Only land when falling
+        if self.player.vel.y > 0:
+            # -- Check for collisions to land
+            coll = pg.sprite.spritecollide(self.player, self.platforms, False)
+            if coll:
+                self.player.pos.y = coll[0].rect.top + 1
+                self.player.vel.y = 0
+        # -- Screen scrolls
+        if self.player.rect.right >= 2*WIDTH / 3:
+            self.player.pos.x -= max(abs(self.player.vel.x),2)
+            for plat in self.platforms:
+                plat.rect.x -= max(abs(self.player.vel.x),2)
+        if self.player.rect.left <= 180:
+            self.player.pos.x += max(abs(self.player.vel.x),2)
+            for plat in self.platforms:
+                plat.rect.x += max(abs(self.player.vel.x),2)
         
     def events(self):
         # -- Game Loop - draw
         # -- User input and controls
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                self.playing = False
+                if self.playing:
+                    self.playing = False
+                self.running = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    self.player.jump()
+            
 
     def draw(self):
         # -- Draw Loop
