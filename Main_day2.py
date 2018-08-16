@@ -55,14 +55,41 @@ class Game:
                 self.player.pos.y = coll[0].rect.top + 1
                 self.player.vel.y = 0
         # -- Screen scrolls
-        if self.player.rect.right >= 2*WIDTH / 3:
-            self.player.pos.x -= max(abs(self.player.vel.x),2)
+        if self.player.rect.top <= LENGTH/4:
+            self.player.pos.y += abs(self.player.vel.y)
             for plat in self.platforms:
-                plat.rect.x -= max(abs(self.player.vel.x),2)
-        if self.player.rect.left <= 180:
-            self.player.pos.x += max(abs(self.player.vel.x),2)
-            for plat in self.platforms:
-                plat.rect.x += max(abs(self.player.vel.x),2)
+                plat.rect.y += abs(self.player.vel.y)
+                if plat.rect.top >= LENGTH:
+                    plat.kill()
+##        # -- Screen scrolls
+##        if self.player.rect.right >= 2*WIDTH / 3:
+##            self.player.pos.x -= max(abs(self.player.vel.x),2)
+##            for plat in self.platforms:
+##                plat.rect.x -= max(abs(self.player.vel.x),2)
+##                if plat.rect.right <= 0:
+##                    plat.kill()
+##        if self.player.rect.left <= 180:
+##            self.player.pos.x += max(abs(self.player.vel.x),2)
+##            for plat in self.platforms:
+##                plat.rect.x += max(abs(self.player.vel.x),2)
+##                if plat.rect.left >= WIDTH:
+##                    plat.kill()
+##
+##        while len(self.platforms) <10:
+##            width = random.randrange (50,100)
+##            p = Platform(random.randrange(WIDTH,WIDTH*2),
+##                         random.randrange(0, LENGTH),
+##                         width, 20)
+##            self.platforms.add(p)
+##            self.all_sprites.add(p)
+        while len(self.platforms) <10:
+            width = random.randrange (50,100)
+            p = Platform(random.randrange(0,WIDTH - width),
+                         random.randrange(-LENGTH, -30),
+                         width, 20)
+            self.platforms.add(p)
+            self.all_sprites.add(p)
+            
         
     def events(self):
         # -- Game Loop - draw

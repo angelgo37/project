@@ -21,7 +21,7 @@ class Player(pg.sprite.Sprite):
         self.rect.x -= 1
         if coll:
             # -- Creating jump physics
-            self.vel.y = -30
+            self.vel.y = -50
         
 
     def update(self):
