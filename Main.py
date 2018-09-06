@@ -15,12 +15,15 @@ class Game:
         pg.display.set_caption("My Window")
         # -- Game running flag set to true
         self.running = True
+        self.high_score = 0
         # -- Manages how fast screen refreshes
         self.clock = pg.time.Clock()
+        self.font_name = pg.font.match_font(FONT_NAME)
 
     def new(self):
         # -- New Game
         self.all_sprites = pg.sprite.Group()
+        self.score = 0
         self.platforms = pg.sprite.Group()
         self.player = Player(self)
         self.all_sprites.add(self.player)
@@ -61,6 +64,16 @@ class Game:
                 plat.rect.y += abs(self.player.vel.y)
                 if plat.rect.top >= LENGTH:
                     plat.kill()
+                    self.score += 10
+
+        # -- Game Over
+        if self.player.rect.bottom > LENGTH:
+            for sprite in self.all_sprites:
+                sprite.rect.y -= max(self.player.vel.y,10)
+                if sprite.rect.bottom < 0:
+                    sprite.kill()
+        if len(self.platforms) == 0:
+            self.playing = False
 ##        # -- Screen scrolls
 ##        if self.player.rect.right >= 2*WIDTH / 3:
 ##            self.player.pos.x -= max(abs(self.player.vel.x),2)
@@ -108,16 +121,52 @@ class Game:
         # -- Draw Loop
         self.screen.fill (BLACK)
         self.all_sprites.draw(self.screen)
+        self.game_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
         # -- Flip the display
         pg.display.flip()
 
     def show_start_screen(self):
         # -- Start screen
-        pass
+        self.screen.fill(BLACK)
+        self.game_text("My Game", 48, WHITE, WIDTH / 2, LENGTH / 4)
+        self.game_text("Move with the arrows and press Space to jump", 22, WHITE, WIDTH / 2, LENGTH * 3/4)
+        pg.display.flip()
+        self.start_wait()
 
     def show_go_screen(self):
         # -- Game over screen
-        pass
+        if not self.running:
+            return
+        if self.score > self.high_score:
+            print("poop")
+            self.high_score = self.score
+        self.screen.fill(BLACK)
+        self.game_text("GAME OVER", 48, WHITE, WIDTH / 2, LENGTH / 4)
+        self.game_text("Press a key to play again", 22, WHITE, WIDTH / 2, LENGTH / 2)
+        self.game_text("Score: " + str(self.score), 22, WHITE, WIDTH / 2, LENGTH * 3/4)
+        self.game_text("High score: " + str(self.high_score), 22, WHITE, WIDTH / 2 , (LENGTH * 1/3) + 150)
+        pg.display.flip()
+        self.start_wait()
+
+    def start_wait(self):
+        waiting = True
+        while waiting:
+            self.clock.tick(FPS)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    waiting = False
+                    self.running = False
+                if event.type == pg.KEYUP:
+                    waiting = False
+                    
+
+    def game_text(self, text, size, color, x, y):
+        font = pg.font.Font(self.font_name, size)
+        text_surface = font.render(text, True, color)
+        text_rect = text_surface.get_rect()
+        text_rect.midtop = (x, y)
+        self.screen.blit(text_surface, text_rect)
+        
     
 
 g = Game()
