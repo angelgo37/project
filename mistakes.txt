@@ -8,3 +8,8 @@
 8. Player vibrates back and forth - Didnt make it a vector - Fixed
 9. Player goes flying off screen, Forgot to * velocity by friction - Fixed
 10. Players can go too fast, Need to add a maximum velocity - Fixed
+11. Didn't define High score - Fixed
+12. Defined High score in new game loop - Fixed
+13. Didn't add a comma between my size of text and colour for High score - Fixed
+14. Named Sprites file wrong - Fixed
+15. Number of platforms were too low for the game to be playable - Fixed
