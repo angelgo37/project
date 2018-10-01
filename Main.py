@@ -2,6 +2,7 @@ import pygame as pg
 import random
 from Settings import *
 from sprite2 import *
+from os import path 
 
 class Game:
     def __init__(self):
@@ -15,10 +16,26 @@ class Game:
         pg.display.set_caption("My Window")
         # -- Game running flag set to true
         self.running = True
-        self.high_score = 0
         # -- Manages how fast screen refreshes
         self.clock = pg.time.Clock()
         self.font_name = pg.font.match_font(FONT_NAME)
+        self.load_data()
+
+    def load_data(self):
+        # -- Loads High score
+        self.dir = path.dirname(__file__)
+        img_dir = path.join(self.dir,"img")
+        with open(path.join(self.dir, HS_FILE), "r+") as f: 
+            try:
+                self.highscore = int(f.read())
+            except:
+                self.highscore = 0
+        # -- Load image
+        self.spritesheet = Spritesheet(path.join(img_dir, SPRITESHEET))
+        self.spritesheet_player = Spritesheet(path.join(img_dir, SPRITESHEET_PLAYER))
+        # -- Load Sounds
+        self.snd_dir = path.join(self.dir,"snd")
+        self.jump_sound = pg.mixer.Sound(path.join(self.snd_dir, "Jump.wav"))
 
     def new(self):
         # -- New Game
@@ -30,15 +47,17 @@ class Game:
         # -- Platforms
         for plat in PLATFORM_LIST:
             # -- Explode the list into its 4 components
-            p = Platform(*plat)
+            p = Platform(self,*plat)
             self.all_sprites.add(p)
             self.platforms.add(p)
+        pg.mixer.music.load(path.join(self.snd_dir, "Happy.mp3"))
         # -- Running the Game
         self.run()
         
 
     def run(self):
         # -- Game Loop
+        pg.mixer.music.play(loops = -1)
         self.playing = True
         while self.playing:
             # - The clock ticks over
@@ -46,6 +65,7 @@ class Game:
             self.events()
             self.update()
             self.draw()
+        pg.mixer.music.fadeout(500)
         
     def update(self):
         # -- Game Loop Update
@@ -55,13 +75,19 @@ class Game:
             # -- Check for collisions to land
             coll = pg.sprite.spritecollide(self.player, self.platforms, False)
             if coll:
-                self.player.pos.y = coll[0].rect.top + 1
-                self.player.vel.y = 0
+                lowest = coll[0]
+                for collision in coll:
+                    if collision.rect.bottom > lowest.rect.bottom:
+                        lowest = collision
+                if self.player.pos.y < lowest.rect.bottom:
+                    self.player.pos.y = lowest.rect.top
+                    self.player.vel.y = 0
+                    self.player.jumping = False
         # -- Screen scrolls
         if self.player.rect.top <= LENGTH/4:
-            self.player.pos.y += abs(self.player.vel.y)
+            self.player.pos.y += max(abs(self.player.vel.y),2)
             for plat in self.platforms:
-                plat.rect.y += abs(self.player.vel.y)
+                plat.rect.y += max(abs(self.player.vel.y),2)
                 if plat.rect.top >= LENGTH:
                     plat.kill()
                     self.score += 10
@@ -95,11 +121,10 @@ class Game:
 ##                         width, 20)
 ##            self.platforms.add(p)
 ##            self.all_sprites.add(p)
-        while len(self.platforms) <10:
+        while len(self.platforms) <20:
             width = random.randrange (50,100)
-            p = Platform(random.randrange(0,WIDTH - width),
-                         random.randrange(-LENGTH, -30),
-                         width, 20)
+            p = Platform(self, random.randrange(0,WIDTH - width),
+                         random.randrange(-LENGTH, -30))
             self.platforms.add(p)
             self.all_sprites.add(p)
             
@@ -115,38 +140,52 @@ class Game:
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     self.player.jump()
+            if event.type == pg.KEYUP:
+                if event.key == pg.K_SPACE:
+                    self.player.jump_cut()
             
 
     def draw(self):
         # -- Draw Loop
-        self.screen.fill (BLACK)
+        self.screen.fill (BLUE)
         self.all_sprites.draw(self.screen)
         self.game_text(str(self.score), 22, WHITE, WIDTH / 2, 15)
-        # -- Flip the display
+        self.screen.blit(self.player.image, self.player.rect)
+        # -- Flip the display   
         pg.display.flip()
 
     def show_start_screen(self):
         # -- Start screen
-        self.screen.fill(BLACK)
+        pg.mixer.music.load(path.join(self.snd_dir, "menu.mp3"))
+        pg.mixer.music.play(loops = -1)
+        self.screen.fill(BLUE)
         self.game_text("My Game", 48, WHITE, WIDTH / 2, LENGTH / 4)
         self.game_text("Move with the arrows and press Space to jump", 22, WHITE, WIDTH / 2, LENGTH * 3/4)
+        self.game_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, 15)
         pg.display.flip()
         self.start_wait()
+        pg.mixer.music.fadeout(500)
 
     def show_go_screen(self):
         # -- Game over screen
         if not self.running:
             return
-        if self.score > self.high_score:
-            print("poop")
-            self.high_score = self.score
-        self.screen.fill(BLACK)
+        pg.mixer.music.load(path.join(self.snd_dir, "gameover.ogg"))
+        pg.mixer.music.play(loops = -1)
+        self.screen.fill(BLUE)
         self.game_text("GAME OVER", 48, WHITE, WIDTH / 2, LENGTH / 4)
         self.game_text("Press a key to play again", 22, WHITE, WIDTH / 2, LENGTH / 2)
         self.game_text("Score: " + str(self.score), 22, WHITE, WIDTH / 2, LENGTH * 3/4)
-        self.game_text("High score: " + str(self.high_score), 22, WHITE, WIDTH / 2 , (LENGTH * 1/3) + 150)
+        if self.score > self.highscore:
+            self.highscore = self.score
+            self.game_text("New High Score", 22, WHITE, WIDTH / 2, LENGTH / 2 + 40)
+            with open(path.join(self.dir, HS_FILE), "r+") as f:
+                f. write(str(self.score))
+        else:
+            self.game_text("High Score: " + str(self.highscore), 22, WHITE, WIDTH / 2, 15)
         pg.display.flip()
         self.start_wait()
+        pg.mixer.music.fadeout(500)
 
     def start_wait(self):
         waiting = True
